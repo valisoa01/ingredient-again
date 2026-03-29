@@ -38,14 +38,18 @@ public class IngredientController {
     @GetMapping("/{id}/stock")
     public ResponseEntity<?> getStockValueAt(
             @PathVariable Long id,
-            @RequestParam String at,
-            @RequestParam String unit) {
-
-        StockValue stock = ingredientService.getStockValueAt(id, at, unit);
-
-        if (stock == null) {
-            return ResponseEntity.notFound().build();
+            @RequestParam(required = false) String at,
+            @RequestParam(required = false) String unit) {
+        if (at == null || at.isBlank() || unit == null || unit.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("Either mandatory query parameter `at` or `unit` is not provided.");
         }
+        IngredientEntity ingredient = ingredientService.findByIdIngredient(id);
+        if (ingredient == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ingredient.id = " +id + " not found.");
+        }
+        StockValue stock = ingredientService.getStockValueAt(id, at, unit);
         return ResponseEntity.ok(stock);
     }
 }
