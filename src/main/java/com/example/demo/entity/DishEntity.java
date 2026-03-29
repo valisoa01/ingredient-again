@@ -9,6 +9,7 @@ import java.util.List;
 public class DishEntity {
     private Long id;
     private String name;
+    private Double sellingPrice;
     private DishTypeEnum dishType;
     private List<IngredientEntity> ingredients;
 
