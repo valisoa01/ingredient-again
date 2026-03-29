@@ -25,14 +25,15 @@ public class IngredientController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IngredientEntity> findByIngredient(@PathVariable Long id) {
+    public ResponseEntity<?> findByIngredient(@PathVariable Long id) {
 
         IngredientEntity ingredient = ingredientService.findByIdIngredient(id);
 
         if (ingredient == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("L'ingrédient avec l'ID " + id + " n'existe pas.");
 
+        }
         return ResponseEntity.ok(ingredient);
     }
     @GetMapping("/{id}/stock")
