@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.IngredientEntity;
+import com.example.demo.entity.StockValue;
 import com.example.demo.service.IngredientService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,5 +34,18 @@ public class IngredientController {
         }
 
         return ResponseEntity.ok(ingredient);
+    }
+    @GetMapping("/{id}/stock")
+    public ResponseEntity<?> getStockValueAt(
+            @PathVariable Long id,
+            @RequestParam String at,
+            @RequestParam String unit) {
+
+        StockValue stock = ingredientService.getStockValueAt(id, at, unit);
+
+        if (stock == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(stock);
     }
 }
