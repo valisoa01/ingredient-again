@@ -12,10 +12,6 @@ public class IngredientEntity {
     private DishEntity dish;
 
     public String getDishName() {
-        if (dish != null) {
-            return  dish.getName();
-        }
-        return null;
+        return getName();
     }
-
 }

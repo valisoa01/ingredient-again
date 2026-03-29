@@ -14,7 +14,10 @@ public class IngredientService {
  public IngredientService(IngredientRepository ingredientRepository) {
   this.ingredientRepository = ingredientRepository;
  }
- public List<IngredientEntity> findAll() {
-  return ingredientRepository.findAll();
+ public List<IngredientEntity> findAllIngredient() {
+  return ingredientRepository.findAllIngredient();
+ }
+ public IngredientEntity findByIdIngredient(Long id) {
+  return ingredientRepository.findByIdIngredient(id);
  }
 }
