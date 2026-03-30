@@ -27,21 +27,17 @@ public class DishRepository {
             return dish;
         });
     }
-    // Vérifier l'existence du plat
     public boolean existsById(Long id) {
         String sql = "SELECT COUNT(*) FROM dish WHERE id = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, id);
         return count != null && count > 0;
     }
 
-    // Mise à jour des ingrédients du plat
-    public void updateDishIngredients(Long dishId, List<DishIngredientRequest> requests) {
+     public void updateDishIngredients(Long dishId, List<DishIngredientRequest> requests) {
 
-        // 1. Supprimer toutes les anciennes associations
-        jdbcTemplate.update("DELETE FROM dish_ingredient WHERE dish_id = ?", dishId);
+         jdbcTemplate.update("DELETE FROM dish_ingredient WHERE dish_id = ?", dishId);
 
-        // 2. Ajouter les nouvelles associations (uniquement si l'ingrédient existe en BDD)
-        String insertSql = """
+         String insertSql = """
         INSERT INTO dish_ingredient (dish_id, ingredient_id, quantity_required, unit)
         SELECT ?, id, 0.0, 'PCS'
         FROM ingredient 
