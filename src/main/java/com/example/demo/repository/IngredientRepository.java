@@ -5,6 +5,7 @@ import com.example.demo.entity.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.sql.Timestamp;
 
@@ -113,5 +114,35 @@ import java.sql.Timestamp;
 
             return stock;
         }, ingredientId, from, to);
+    }
+    public List<StockMovement> createStockMovement (Long ingredientId, List<StockMovement> stock) {
+        String insertSql = """
+        INSERT INTO stock_movement (ingredient_id, quantity, unit, movement_type, creation_datetime)
+        VALUES (?, ?, ?, ?, NOW())
+        RETURNING id, creation_datetime, unit, quantity, movement_type
+        """;
+        List<StockMovement> createdList = new ArrayList<>();
+
+        for (StockMovement stockMovement : stock) {
+            StockMovement mvt = jdbcTemplate.queryForObject(
+                    insertSql,
+                    (rs, rowNum) -> {
+                        StockMovement sm = new StockMovement();
+                        sm.setId(rs.getLong("id"));
+                        sm.setCreationDatetime(rs.getTimestamp("creation_datetime").toInstant());
+                        sm.setUnit(rs.getString("unit"));
+                        sm.setQuantity(rs.getDouble("quantity"));
+                        sm.setMovementType(MovementType.valueOf(rs.getString("movement_type")));
+                        return sm;
+                    },
+                    ingredientId,
+                    stockMovement.getQuantity(),
+                    stockMovement.getUnit(),
+                    stockMovement.getMovementType()
+
+            );
+            createdList.add(mvt);
+        }
+        return createdList;
     }
 }

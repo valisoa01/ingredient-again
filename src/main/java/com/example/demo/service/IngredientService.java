@@ -32,4 +32,8 @@ public class IngredientService {
  public List<StockMovement> getStockMovements(Long ingredientID, String from, String to) {
   return ingredientRepository.getStockMovements(ingredientID, from, to);
  }
+
+ public List<StockMovement> createStockMovements(Long ingredientId, List<StockMovement> dtos) {
+  return ingredientRepository.createStockMovement(ingredientId, dtos);
+ }
 }

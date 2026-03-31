@@ -64,4 +64,15 @@ public class IngredientController {
         List<StockMovement> stockMovements = ingredientService.getStockMovements(id, from, to);
         return ResponseEntity.ok(stockMovements);
     }
+
+    @PostMapping("/{id}/stockMovements")
+    public ResponseEntity<?> createStockMovement(@PathVariable Long id, @RequestBody List<StockMovement> dtos) {
+       IngredientEntity ing =  ingredientService.findByIdIngredient(id);
+       if (ing == null) {
+           return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ingredient.id = " +id + " not found.");
+       }
+       List<StockMovement> stockMovements = ingredientService.createStockMovements(id, dtos);
+       return ResponseEntity.ok(stockMovements);
+    }
 }
