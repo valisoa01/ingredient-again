@@ -58,8 +58,7 @@ public class DishRepository {
 
      public void updateDishIngredients(Long dishId, List<DishIngredientRequest> requests) {
 
-        // 1. Supprimer les anciennes associations
-        String deleteSql = "DELETE FROM dish_ingredient WHERE dish_id = ?";
+         String deleteSql = "DELETE FROM dish_ingredient WHERE dish_id = ?";
 
         try (Connection conn = DBConnection.getDBConnection();
              PreparedStatement pstmtDelete = conn.prepareStatement(deleteSql)) {
