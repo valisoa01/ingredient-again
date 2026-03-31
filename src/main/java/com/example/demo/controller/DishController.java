@@ -21,13 +21,13 @@ public class DishController {
     public List<DishEntity> findAllDish() {
         return dishService.findAllDish();
     }
+
     @PutMapping("/{id}/ingredients")
     public ResponseEntity<?> updateDishIngredients(
             @PathVariable Long id,
             @RequestBody(required = false) List<DishIngredientRequest> requestBody) {
 
-        // Vérification : Body obligatoire
-        if (requestBody == null) {
+         if (requestBody == null) {
             return ResponseEntity.badRequest()
                     .body("Request body is mandatory and must contain a list of ingredients");
         }
@@ -39,6 +39,6 @@ public class DishController {
                     .body("Dish.id=" + id + " is not found");
         }
 
-        return ResponseEntity.ok().build(); // 200 OK - Succès
+         return ResponseEntity.ok("Ingredients of dish " + id + " have been successfully updated.");
     }
 }
