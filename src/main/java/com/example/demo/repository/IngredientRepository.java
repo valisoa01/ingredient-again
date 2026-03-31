@@ -1,13 +1,12 @@
 package com.example.demo.repository;
 
 
-import com.example.demo.entity.CategoryEnum;
-import com.example.demo.entity.IngredientEntity;
-import com.example.demo.entity.StockValue;
+import com.example.demo.entity.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.sql.Timestamp;
 
 @Repository
  public class IngredientRepository {
@@ -81,5 +80,38 @@ import java.util.List;
             return null;
         }
     }
+    public List<StockMovement> getStockMovements(Long ingredientId, String from, String to) {
 
+        String sql = """
+            SELECT 
+                id,
+                creation_datetime,
+                unit,
+                quantity,
+                movement_type
+            FROM stock_movement
+            WHERE ingredient_id = ?
+              AND creation_datetime BETWEEN ?::timestamp AND ?::timestamp
+            ORDER BY creation_datetime ASC
+            """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> {
+            StockMovement stock = new StockMovement();
+
+            stock.setId(rs.getLong("id"));
+
+             Timestamp timestamp = rs.getTimestamp("creation_datetime");
+            stock.setCreationDatetime(timestamp != null ? ((java.sql.Timestamp) timestamp).toInstant() : null);
+
+            stock.setUnit(rs.getString("unit"));
+            stock.setQuantity(rs.getDouble("quantity"));
+
+             String movementTypeStr = rs.getString("movement_type");
+            if (movementTypeStr != null) {
+                stock.setMovementType(MovementType.valueOf(movementTypeStr));
+            }
+
+            return stock;
+        }, ingredientId, from, to);
+    }
 }

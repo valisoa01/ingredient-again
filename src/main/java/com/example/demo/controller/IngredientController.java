@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.IngredientEntity;
+import com.example.demo.entity.StockMovement;
 import com.example.demo.entity.StockValue;
 import com.example.demo.service.IngredientService;
 import org.springframework.http.HttpStatus;
@@ -52,5 +53,15 @@ public class IngredientController {
         }
         StockValue stock = ingredientService.getStockValueAt(id, at, unit);
         return ResponseEntity.ok(stock);
+    }
+    @GetMapping("/{id}/stockMovements")
+    public ResponseEntity<?> getStockMovements(@PathVariable Long id, @RequestParam String from, @RequestParam String to) {
+        IngredientEntity ing =  ingredientService.findByIdIngredient(id);
+        if (ing == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Ingredient.id = " +id + " not found.");
+        }
+        List<StockMovement> stockMovements = ingredientService.getStockMovements(id, from, to);
+        return ResponseEntity.ok(stockMovements);
     }
 }
