@@ -1,148 +1,174 @@
 package com.example.demo.repository;
 
-
-import com.example.demo.entity.*;
-import org.springframework.jdbc.core.JdbcTemplate;
+import com.example.demo.entity.CategoryEnum;
+import com.example.demo.entity.IngredientEntity;
+import com.example.demo.entity.MovementType;
+import com.example.demo.entity.StockMovement;
+import com.example.demo.entity.StockValue;
 import org.springframework.stereotype.Repository;
 
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Timestamp;
 
 @Repository
- public class IngredientRepository {
-    private final JdbcTemplate jdbcTemplate;
+public class IngredientRepository {
 
-    public IngredientRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
+
     public List<IngredientEntity> findAllIngredient() {
-        String sql = """
-        SELECT 
-            id, name, price, category FROM ingredient 
-     
-        """;
+        List<IngredientEntity> ingredients = new ArrayList<>();
+        String sql = "SELECT id, name, price, category FROM ingredient";
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            IngredientEntity ing = new IngredientEntity();
-            ing.setId(rs.getLong("id"));
-            ing.setName(rs.getString("name"));
-            ing.setPrice(rs.getDouble("price"));
-            ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
-            return ing;
-        });
-    }
-    public IngredientEntity findByIdIngredient(Long id) {
-        String sql = "SELECT id, name, price, category from ingredient where id = ?";
-        try {
-            return jdbcTemplate.queryForObject(sql, new Object[]{id}, (rs, rowNum) -> {
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
                 IngredientEntity ing = new IngredientEntity();
                 ing.setId(rs.getLong("id"));
                 ing.setName(rs.getString("name"));
                 ing.setPrice(rs.getDouble("price"));
-                ing.setCategory(
-                        CategoryEnum.valueOf(rs.getString("category")));
-                return ing;
-            });
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-    }
-    public StockValue getStockValueAt(Long ingredientId, String at, String requestedUnit) {
-
-        String sql = """
-        SELECT COALESCE(
-                    SUM(CASE WHEN movement_type = 'IN'  THEN quantity ELSE 0 END) -
-                    SUM(CASE WHEN movement_type = 'OUT' THEN quantity ELSE 0 END),
-                    0
-               ) as stock_quantity
-        FROM stock_movement 
-        WHERE ingredient_id = ? 
-          AND creation_datetime <= ?::timestamp
-        """;
-
-        try {
-            Double quantity = jdbcTemplate.queryForObject(
-                    sql,
-                    new Object[]{ingredientId, at},
-                    Double.class
-            );
-
-            if (quantity == null) {
-                quantity = 0.0;
+                ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+                ingredients.add(ing);
             }
-
-            return new StockValue(quantity, requestedUnit);
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            throw new RuntimeException("Erreur lors de la récupération des ingrédients", e);
         }
+        return ingredients;
     }
-    public List<StockMovement> getStockMovements(Long ingredientId, String from, String to) {
 
+     public IngredientEntity findByIdIngredient(Long id) {
+        String sql = "SELECT id, name, price, category FROM ingredient WHERE id = ?";
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, id);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    IngredientEntity ing = new IngredientEntity();
+                    ing.setId(rs.getLong("id"));
+                    ing.setName(rs.getString("name"));
+                    ing.setPrice(rs.getDouble("price"));
+                    ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+                    return ing;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+     public StockValue getStockValueAt(Long ingredientId, String at, String requestedUnit) {
         String sql = """
-            SELECT 
-                id,
-                creation_datetime,
-                unit,
-                quantity,
-                movement_type
+            SELECT COALESCE(
+                SUM(CASE WHEN movement_type = 'IN' THEN quantity ELSE 0 END) -
+                SUM(CASE WHEN movement_type = 'OUT' THEN quantity ELSE 0 END),
+                0
+            ) as stock_quantity
+            FROM stock_movement 
+            WHERE ingredient_id = ? 
+              AND creation_datetime <= ?::timestamp
+            """;
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setLong(1, ingredientId);
+            pstmt.setString(2, at);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    double quantity = rs.getDouble("stock_quantity");
+                    return new StockValue(quantity, requestedUnit);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new StockValue(0.0, requestedUnit);
+    }
+
+
+    public List<StockMovement> getStockMovements(Long ingredientId, String from, String to) {
+        List<StockMovement> movements = new ArrayList<>();
+        String sql = """
+            SELECT id, creation_datetime, unit, quantity, movement_type
             FROM stock_movement
             WHERE ingredient_id = ?
               AND creation_datetime BETWEEN ?::timestamp AND ?::timestamp
             ORDER BY creation_datetime ASC
             """;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) -> {
-            StockMovement stock = new StockMovement();
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            stock.setId(rs.getLong("id"));
+            pstmt.setLong(1, ingredientId);
+            pstmt.setString(2, from);
+            pstmt.setString(3, to);
 
-             Timestamp timestamp = rs.getTimestamp("creation_datetime");
-            stock.setCreationDatetime(timestamp != null ? ((java.sql.Timestamp) timestamp).toInstant() : null);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    StockMovement stock = new StockMovement();
+                    stock.setId(rs.getLong("id"));
+                    Timestamp ts = rs.getTimestamp("creation_datetime");
+                    stock.setCreationDatetime(ts != null ? ts.toInstant() : null);
+                    stock.setUnit(rs.getString("unit"));
+                    stock.setQuantity(rs.getDouble("quantity"));
 
-            stock.setUnit(rs.getString("unit"));
-            stock.setQuantity(rs.getDouble("quantity"));
-
-             String movementTypeStr = rs.getString("movement_type");
-            if (movementTypeStr != null) {
-                stock.setMovementType(MovementType.valueOf(movementTypeStr));
+                    String typeStr = rs.getString("movement_type");
+                    if (typeStr != null) {
+                        stock.setMovementType(MovementType.valueOf(typeStr));
+                    }
+                    movements.add(stock);
+                }
             }
-
-            return stock;
-        }, ingredientId, from, to);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return movements;
     }
-    public List<StockMovement> createStockMovement (Long ingredientId, List<StockMovement> stock) {
-        String insertSql = """
-        INSERT INTO stock_movement (ingredient_id, quantity, unit, movement_type, creation_datetime)
-        VALUES (?, ?, ?, ?, NOW())
-        RETURNING id, creation_datetime, unit, quantity, movement_type
-        """;
+
+     public List<StockMovement> createStockMovements(Long ingredientId, List<StockMovement> dtos) {
+
         List<StockMovement> createdList = new ArrayList<>();
 
-        for (StockMovement stockMovement : stock) {
-            StockMovement mvt = jdbcTemplate.queryForObject(
-                    insertSql,
-                    (rs, rowNum) -> {
+        String insertSql = """
+            INSERT INTO stock_movement 
+                (ingredient_id, quantity, unit, movement_type, creation_datetime)
+            VALUES (?, ?, ?, ?, NOW())
+            RETURNING id, creation_datetime, unit, quantity, movement_type
+            """;
+
+        try (Connection conn = DBConnection.getDBConnection();
+             PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+
+            for (StockMovement dto : dtos) {
+                pstmt.setLong(1, ingredientId);
+                pstmt.setDouble(2, dto.getQuantity());
+                pstmt.setString(3, dto.getUnit());
+                pstmt.setString(4, dto.getMovementType().name());   // .name() car c'est un Enum
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    if (rs.next()) {
                         StockMovement sm = new StockMovement();
                         sm.setId(rs.getLong("id"));
                         sm.setCreationDatetime(rs.getTimestamp("creation_datetime").toInstant());
                         sm.setUnit(rs.getString("unit"));
                         sm.setQuantity(rs.getDouble("quantity"));
                         sm.setMovementType(MovementType.valueOf(rs.getString("movement_type")));
-                        return sm;
-                    },
-                    ingredientId,
-                    stockMovement.getQuantity(),
-                    stockMovement.getUnit(),
-                    stockMovement.getMovementType()
+                        createdList.add(sm);
+                    }
+                }
+            }
+            return createdList;
 
-            );
-            createdList.add(mvt);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la création des mouvements de stock pour l'ingrédient " + ingredientId, e);
         }
-        return createdList;
     }
 }

@@ -4,7 +4,6 @@ import com.example.demo.entity.IngredientEntity;
 import com.example.demo.entity.StockMovement;
 import com.example.demo.entity.StockValue;
 import com.example.demo.repository.IngredientRepository;
-import org.springframework.data.relational.core.sql.In;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,8 +31,7 @@ public class IngredientService {
  public List<StockMovement> getStockMovements(Long ingredientID, String from, String to) {
   return ingredientRepository.getStockMovements(ingredientID, from, to);
  }
-
  public List<StockMovement> createStockMovements(Long ingredientId, List<StockMovement> dtos) {
-  return ingredientRepository.createStockMovement(ingredientId, dtos);
+  return ingredientRepository.createStockMovements(ingredientId, dtos);
  }
 }
