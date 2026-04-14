@@ -20,8 +20,8 @@ public class IngredientRepository {
         String sql = "SELECT id, name, price, category FROM ingredient";
 
         try (Connection conn = DBConnection.getDBConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 IngredientEntity ing = new IngredientEntity();
