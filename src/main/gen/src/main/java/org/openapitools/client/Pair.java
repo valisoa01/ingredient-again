@@ -1,6 +1,6 @@
 /*
- * Ping
- * Ping
+ * Gestion des ingrédients et plats - API REST
+ * API pour la gestion des ingrédients et des plats (TD5 PROG3)
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -13,7 +13,7 @@
 
 package org.openapitools.client;
 
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-14T09:36:18.839461590+03:00[Asia/Aden]", comments = "Generator version: 7.7.0")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-15T07:43:05.537316334+03:00[Asia/Aden]", comments = "Generator version: 7.7.0")
 public class Pair {
     private String name = "";
     private String value = "";

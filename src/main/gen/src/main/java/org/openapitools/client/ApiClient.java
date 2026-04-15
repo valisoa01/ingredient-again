@@ -1,6 +1,6 @@
 /*
- * Ping
- * Ping
+ * Gestion des ingrédients et plats - API REST
+ * API pour la gestion des ingrédients et des plats (TD5 PROG3)
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -61,11 +61,11 @@ import org.openapitools.client.auth.ApiKeyAuth;
  */
 public class ApiClient {
 
-    private String basePath = "http://localhost";
+    private String basePath = "http://localhost:8080/api";
     protected List<ServerConfiguration> servers = new ArrayList<ServerConfiguration>(Arrays.asList(
     new ServerConfiguration(
-      "",
-      "No description provided",
+      "http://localhost:8080/api",
+      "Serveur de développement",
       new HashMap<String, ServerVariable>()
     )
   ));
@@ -156,7 +156,7 @@ public class ApiClient {
     /**
      * Set base path
      *
-     * @param basePath Base path of the URL (e.g http://localhost
+     * @param basePath Base path of the URL (e.g http://localhost:8080/api
      * @return An instance of OkHttpClient
      */
     public ApiClient setBasePath(String basePath) {

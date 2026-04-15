@@ -1,6 +1,6 @@
 /*
- * Ping
- * Ping
+ * Gestion des ingrédients et plats - API REST
+ * API pour la gestion des ingrédients et des plats (TD5 PROG3)
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -93,6 +93,11 @@ public class JSON {
         gsonBuilder.registerTypeAdapter(OffsetDateTime.class, offsetDateTimeTypeAdapter);
         gsonBuilder.registerTypeAdapter(LocalDate.class, localDateTypeAdapter);
         gsonBuilder.registerTypeAdapter(byte[].class, byteArrayAdapter);
+        gsonBuilder.registerTypeAdapterFactory(new org.openapitools.client.model.DishResponse.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new org.openapitools.client.model.ErrorResponse.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new org.openapitools.client.model.IngredientAssociationRequest.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new org.openapitools.client.model.IngredientResponse.CustomTypeAdapterFactory());
+        gsonBuilder.registerTypeAdapterFactory(new org.openapitools.client.model.StockResponse.CustomTypeAdapterFactory());
         gson = gsonBuilder.create();
     }
 

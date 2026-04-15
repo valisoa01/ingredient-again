@@ -1,17 +1,318 @@
 openapi: 3.1.0
 info:
-  title: Ping
-  description: Ping
+  title: Gestion des ingrédients et plats - API REST
+  description: API pour la gestion des ingrédients et des plats (TD5 PROG3)
   version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api
+    description: Serveur de développement
+
 paths:
-  /ping:
+  /ingredients:
     get:
-      summary: Retourne Pong
+      summary: Récupère la liste de tous les ingrédients
+      description: Retourne une liste d'objets JSON contenant tous les ingrédients enregistrés dans la base de données
+      operationId: getAllIngredients
+      tags:
+        - Ingrédients
       responses:
-        "200":
-          description: Afficher Pong
+        '200':
+          description: Liste des ingrédients récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IngredientResponse'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingredients/{id}:
+    get:
+      summary: Récupère un ingrédient par son identifiant
+      description: Retourne un objet JSON correspondant à l'ingrédient portant l'identifiant fourni
+      operationId: getIngredientById
+      tags:
+        - Ingrédients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'ingrédient
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Ingrédient trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientResponse'
+        '404':
+          description: Ingrédient non trouvé
           content:
             text/plain:
               schema:
                 type: string
-                example: "Pong"
+                example: "Ingrédient_id=1 is not found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ingredients/{id}/stock:
+    get:
+      summary: Récupère la valeur du stock d'un ingrédient à un moment donné
+      description: Retourne un objet JSON contenant la valeur du stock de l'ingrédient à la date/heure spécifiée
+      operationId: getIngredientStock
+      tags:
+        - Ingrédients
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de l'ingrédient
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: at
+          in: query
+          required: true
+          description: Date et heure à laquelle on veut connaître la valeur du stock
+          schema:
+            type: string
+            format: date-time
+            example: "2025-04-15T10:30:00Z"
+        - name: unit
+          in: query
+          required: true
+          description: Unité de mesure du stock (PCS, KG, L)
+          schema:
+            type: string
+            enum: [PCS, KG, L]
+            example: "KG"
+      responses:
+        '200':
+          description: Valeur du stock récupérée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockResponse'
+        '400':
+          description: Paramètres de requête manquants
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Either mandatory query parameter 'at' or 'unit' is not provided."
+        '404':
+          description: Ingrédient non trouvé
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Ingrédient_id=1 is not found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dishes:
+    get:
+      summary: Récupère la liste de tous les plats
+      description: Retourne une liste d'objets JSON contenant tous les plats enregistrés dans la base de données, avec leurs ingrédients respectifs
+      operationId: getAllDishes
+      tags:
+        - Plats
+      responses:
+        '200':
+          description: Liste des plats récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DishResponse'
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dishes/{id}/ingredients:
+    put:
+      summary: Modifie la liste des ingrédients associés à un plat
+      description: Permet d'associer ou dissocier une liste d'ingrédients au plat spécifié. Les ingrédients fournis qui n'existent pas dans la base sont ignorés.
+      operationId: updateDishIngredients
+      tags:
+        - Plats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique du plat
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      requestBody:
+        required: true
+        description: Liste des ingrédients à associer ou dissocier du plat
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/IngredientAssociationRequest'
+      responses:
+        '200':
+          description: Liste des ingrédients mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DishResponse'
+        '400':
+          description: Corps de requête manquant ou invalide
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Request body is required and must contain a valid list of ingredients."
+        '404':
+          description: Plat non trouvé
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Dish_id=1 is not found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    IngredientResponse:
+      type: object
+      required:
+        - identifier
+        - nom
+        - categorie
+        - prix
+      properties:
+        identifier:
+          type: integer
+          format: int64
+          description: Identifiant unique de l'ingrédient
+          example: 1
+        nom:
+          type: string
+          description: Nom de l'ingrédient
+          example: "Tomate"
+        categorie:
+          type: string
+          description: Catégorie de l'ingrédient
+          enum: [LEGUME, FRUIT, VIANDE, POISSON, EPICE, AUTRE]
+          example: "LEGUME"
+        prix:
+          type: number
+          format: double
+          description: Prix de l'ingrédient
+          example: 2.50
+
+    StockResponse:
+      type: object
+      required:
+        - unit
+        - value
+      properties:
+        unit:
+          type: string
+          description: Unité de mesure
+          enum: [PCS, KG, L]
+          example: "KG"
+        value:
+          type: number
+          format: double
+          description: Valeur du stock
+          example: 10.5
+
+    DishResponse:
+      type: object
+      required:
+        - identifier
+        - nom
+        - prixVente
+        - ingredients
+      properties:
+        identifier:
+          type: integer
+          format: int64
+          description: Identifiant unique du plat
+          example: 1
+        nom:
+          type: string
+          description: Nom du plat
+          example: "Salade César"
+        prixVente:
+          type: number
+          format: double
+          description: Prix de vente du plat
+          example: 15.90
+        ingredients:
+          type: array
+          description: Liste des ingrédients composant le plat
+          items:
+            $ref: '#/components/schemas/IngredientResponse'
+
+    IngredientAssociationRequest:
+      type: object
+      required:
+        - identifier
+      properties:
+        identifier:
+          type: integer
+          format: int64
+          description: Identifiant de l'ingrédient à associer ou dissocier
+          example: 1
+        name:
+          type: string
+          description: Ignoré lors de l'association (seul l'identifiant est utilisé)
+          example: "Tomate"
+        category:
+          type: string
+          description: Ignoré lors de l'association
+          example: "LEGUME"
+        price:
+          type: number
+          format: double
+          description: Ignoré lors de l'association
+          example: 2.50
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Message d'erreur
+          example: "Une erreur est survenue"
+        timestamp:
+          type: string
+          format: date-time
+          description: Horodatage de l'erreur
+          example: "2025-04-15T10:30:00Z"

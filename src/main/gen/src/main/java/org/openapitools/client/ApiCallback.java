@@ -1,6 +1,6 @@
 /*
- * Ping
- * Ping
+ * Gestion des ingrédients et plats - API REST
+ * API pour la gestion des ingrédients et des plats (TD5 PROG3)
  *
  * The version of the OpenAPI document: 1.0.0
  * 
